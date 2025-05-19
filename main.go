@@ -1,38 +1,43 @@
 package main
 
 import (
+	"MediaCompressionManager/decompresser"
+	regexextension "MediaCompressionManager/regex"
+	"MediaCompressionManager/scanner"
+	statuscheck "MediaCompressionManager/status"
 	"fmt"
 	"log"
-
-	"MediaCompressionManager/decompresser"
-	"MediaCompressionManager/scanner"
-	"MediaCompressionManager/status"
+	"os"
 )
 
 func main() {
-	inputFile := "example.zip"
-	outputDir := inputFile + "_extracted"
-	folderID := "your-folder-id"
+	var inputFile string = os.Args[1]
+	var folderID string = os.Getenv("FOLDER_ID")
+	var sanitizedFileName string = regexextension.RemoveExtension(inputFile)
+	var outputDir string = sanitizedFileName
 
-	fmt.Println("🟡 Waiting for folder to finish syncing...")
+	//Wait for the sync to finish before continuing.
+	fmt.Println("Waiting for folder to finish syncing.")
 	if err := statuscheck.WaitForSync(folderID); err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println("🔍 Scanning compressed file...")
-	if err := scanner.ScanFile(inputFile); err != nil {
-		log.Fatal("Scan failed:", err)
+	//Scan the file for viruses.
+	fmt.Println("Scanning compressed file.")
+	scanResult := scanner.ScanFile(inputFile)
+	if scanResult.VirusFound {
+		log.Fatal("Virus found in compressed file:", scanResult.VirusDescription)
+	} else if scanResult.Error != nil {
+		log.Fatal("Error during scan:", scanResult.Error)
 	}
 
-	fmt.Println("📂 Decompressing...")
+	//Extract the file.
+	fmt.Println("Decompressing.")
 	if err := decompresser.Decompress(inputFile, outputDir); err != nil {
 		log.Fatal("Decompression failed:", err)
 	}
 
-	fmt.Println("🔍 Scanning extracted folder...")
-	if err := scanner.ScanFile(outputDir); err != nil {
-		log.Fatal("Post-scan failed:", err)
-	}
-
-	fmt.Println("✅ All steps completed.")
+	//TODO: Move the file to the output directory and possibly delete it.
+	logEntry := fmt.Sprintf("File %s has been extracted to %s.", inputFile, outputDir)
+	fmt.Println(logEntry)
 }

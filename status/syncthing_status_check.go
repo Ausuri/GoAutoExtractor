@@ -5,18 +5,17 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"time"
 )
 
-const (
-	apiKey   = "YOUR_API_KEY"
-	baseURL  = "http://localhost:8384"
-)
-
 func WaitForSync(folderID string) error {
+
+	baseURL := os.Getenv("ST_BASE_URL")
 	url := fmt.Sprintf("%s/rest/db/status?folder=%s", baseURL, folderID)
 
 	for {
+		apiKey := os.Getenv("ST_API_KEY")
 		req, _ := http.NewRequest("GET", url, nil)
 		req.Header.Set("X-API-Key", apiKey)
 
@@ -24,6 +23,7 @@ func WaitForSync(folderID string) error {
 		if err != nil {
 			return err
 		}
+
 		body, _ := io.ReadAll(resp.Body)
 		resp.Body.Close()
 

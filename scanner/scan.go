@@ -1,16 +1,33 @@
 package scanner
 
 import (
-	"fmt"
-	"os/exec"
+	"os"
+
+	"github.com/sheenobu/go-clamscan"
 )
 
-func ScanFile(path string) error {
-	cmd := exec.Command("clamscan", "--infected", "--recursive", "--scan-archive=yes", path)
-	output, err := cmd.CombinedOutput()
-	fmt.Println(string(output))
-	if err != nil {
-		return fmt.Errorf("virus scan failed: %v", err)
+type ScanResult struct {
+	Error            error
+	File             string
+	VirusDescription string
+	VirusFound       bool
+}
+
+func ScanFile(path string) (result *ScanResult) {
+
+	options := &clamscan.Options{
+		BinaryLocation: os.Getenv("CLAMSCAN_BINARY"),
 	}
-	return nil
+
+	sr, cErr := clamscan.Scan(options, path)
+	scanResult := <-sr
+
+	result = &ScanResult{
+		Error:            cErr,
+		File:             scanResult.File,
+		VirusDescription: scanResult.Virus,
+		VirusFound:       scanResult.Found,
+	}
+
+	return result
 }
