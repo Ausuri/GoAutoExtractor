@@ -1,8 +1,7 @@
 package main
 
 import (
-	"MediaCompressionManager/decompresser"
-	regexextension "MediaCompressionManager/regex"
+	regexextension "MediaCompressionManager/extensionsanitizer"
 	"MediaCompressionManager/scanner"
 	statuscheck "MediaCompressionManager/status"
 	"fmt"
@@ -33,7 +32,8 @@ func main() {
 
 	//Extract the file.
 	fmt.Println("Decompressing.")
-	if err := decompresser.Decompress(inputFile, outputDir); err != nil {
+	extractor := decompresser.HashigoExtractor{}
+	if err := extractor.Decompress(inputFile, outputDir); err != nil {
 		log.Fatal("Decompression failed:", err)
 	}
 

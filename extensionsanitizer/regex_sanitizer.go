@@ -1,10 +1,12 @@
-package removeextension
+package extensionsanitizer
 
 import (
 	"regexp"
 )
 
-func RemoveExtension(fileName string) string {
+type RegexSanitizer struct{}
+
+func (r RegexSanitizer) RemoveExtension(fileName string) string {
 	tarballRegex := regexp.MustCompile(`\.tar\.\S{2,3}$`)
 	fileExtensionRegex := regexp.MustCompile(`\.\S{2,4}$`)
 
