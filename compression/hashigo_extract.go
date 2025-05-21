@@ -8,8 +8,7 @@ import (
 	"github.com/hashicorp/go-extract"
 )
 
-type HashigoExtractor struct {
-}
+type HashigoExtractor struct{}
 
 func (h *HashigoExtractor) Decompress(src, dest string) error {
 

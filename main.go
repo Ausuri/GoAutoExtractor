@@ -1,23 +1,33 @@
 package main
 
 import (
-	regexextension "MediaCompressionManager/extensionsanitizer"
-	"MediaCompressionManager/scanner"
-	statuscheck "MediaCompressionManager/status"
+	compressionmanager "MediaCompressionManager/compression-manager"
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 )
 
 func main() {
-	var inputFile string = os.Args[1]
-	var folderID string = os.Getenv("FOLDER_ID")
-	var sanitizedFileName string = regexextension.RemoveExtension(inputFile)
-	var outputDir string = sanitizedFileName
+
+	builder := compressionmanager.NewBuilder()
+	compressionmanager := builder.Build()
+
+	//Initialize interfaces.
+	extractor := compressionmanager.Extractor
+	sanitizer := compressionmanager.Sanitizer
+	scanner := compressionmanager.Scanner
+	statuschecker := compressionmanager.Statuschecker
+
+	inputFile := os.Args[1]
+	folderID := os.Getenv("FOLDER_ID")
+	sanitizedFileName := sanitizer.RemoveExtension(inputFile)
+	outputDir := sanitizedFileName
+	syncTimeoutSeconds := getSyncTimeoutSetting()
 
 	//Wait for the sync to finish before continuing.
 	fmt.Println("Waiting for folder to finish syncing.")
-	if err := statuscheck.WaitForSync(folderID); err != nil {
+	if err := statuschecker.WaitForSync(folderID, syncTimeoutSeconds); err != nil {
 		log.Fatal(err)
 	}
 
@@ -32,7 +42,6 @@ func main() {
 
 	//Extract the file.
 	fmt.Println("Decompressing.")
-	extractor := decompresser.HashigoExtractor{}
 	if err := extractor.Decompress(inputFile, outputDir); err != nil {
 		log.Fatal("Decompression failed:", err)
 	}
@@ -40,4 +49,24 @@ func main() {
 	//TODO: Move the file to the output directory and possibly delete it.
 	logEntry := fmt.Sprintf("File %s has been extracted to %s.", inputFile, outputDir)
 	fmt.Println(logEntry)
+}
+
+func getSyncTimeoutSetting() int {
+
+	syncTimeoutSecondsStr := os.Getenv("SYNC_TIMEOUT_SECONDS")
+	var timeoutSeconds int
+
+	if syncTimeoutSecondsStr == "" {
+		timeoutSeconds = 60
+	} else {
+		var err error
+		timeoutSeconds, err = strconv.Atoi(syncTimeoutSecondsStr)
+
+		if err != nil {
+			log.Fatal("Invalid SYNC_TIMEOUT_SECONDS:", err)
+			timeoutSeconds = 60
+		}
+	}
+
+	return timeoutSeconds
 }

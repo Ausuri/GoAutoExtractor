@@ -4,10 +4,12 @@ import (
 	"MediaCompressionManager/compression"
 	"MediaCompressionManager/extensionsanitizer"
 	"MediaCompressionManager/scanner"
+	"MediaCompressionManager/statuschecker"
 )
 
 type CompressionManager struct {
-	extractor compression.DecompressorInterface
-	sanitizer extensionsanitizer.SanitizerInterface
-	scanner   scanner.ScannerInterface
+	Extractor     compression.DecompressorInterface
+	Sanitizer     extensionsanitizer.SanitizerInterface
+	Scanner       scanner.ScannerInterface
+	Statuschecker statuschecker.StatusCheckerInterface
 }
