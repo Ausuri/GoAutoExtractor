@@ -1,0 +1,13 @@
+.7z
+.br
+.bz2
+.gz
+.lz4
+.rar
+.sz
+.tar
+.tar.gz
+.xz
+.zip
+.zlib
+.zst

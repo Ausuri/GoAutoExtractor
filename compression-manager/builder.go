@@ -2,14 +2,14 @@ package compressionmanager
 
 import (
 	"MediaCompressionManager/compression"
-	"MediaCompressionManager/extensionsanitizer"
+	"MediaCompressionManager/regextools"
 	"MediaCompressionManager/scanner"
 	"MediaCompressionManager/statuschecker"
 )
 
 type Builder struct {
 	extractor     compression.DecompressorInterface
-	sanitizer     extensionsanitizer.SanitizerInterface
+	regexTool     regextools.RegexToolInterface
 	scanner       scanner.ScannerInterface
 	statuschecker statuschecker.StatusCheckerInterface
 }
@@ -22,8 +22,8 @@ func (b *Builder) SetDecompressor(iextractor compression.DecompressorInterface) 
 	b.extractor = iextractor
 }
 
-func (b *Builder) SetExtensionSanitizer(iextension extensionsanitizer.SanitizerInterface) {
-	b.sanitizer = iextension
+func (b *Builder) SetExtensionSanitizer(iextension regextools.RegexToolInterface) {
+	b.regexTool = iextension
 }
 
 func (b *Builder) SetScanner(iscanner scanner.ScannerInterface) {
@@ -40,8 +40,8 @@ func (b *Builder) Build() *CompressionManager {
 	if b.extractor == nil {
 		b.extractor = &compression.HashigoExtractor{}
 	}
-	if b.sanitizer == nil {
-		b.sanitizer = &extensionsanitizer.RegexSanitizer{}
+	if b.regexTool == nil {
+		b.regexTool = &regextools.RegexTool{}
 	}
 	if b.scanner == nil {
 		b.scanner = &scanner.ClamScanner{}
@@ -51,9 +51,9 @@ func (b *Builder) Build() *CompressionManager {
 	}
 
 	return &CompressionManager{
-		Extractor:     b.extractor,
-		Sanitizer:     b.sanitizer,
-		Scanner:       b.scanner,
-		Statuschecker: b.statuschecker,
+		extractor:     b.extractor,
+		regexTool:     b.regexTool,
+		scanner:       b.scanner,
+		statuschecker: b.statuschecker,
 	}
 }
