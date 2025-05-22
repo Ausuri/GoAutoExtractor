@@ -1,7 +1,7 @@
 package main
 
 import (
-	compressionmanager "MediaCompressionManager/compression-manager"
+	compressionmanager "GoAutoExtractor/compression-manager"
 	"log"
 	"os"
 )

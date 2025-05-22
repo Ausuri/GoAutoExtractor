@@ -1,10 +1,10 @@
 package compressionmanager
 
 import (
-	"MediaCompressionManager/compression"
-	"MediaCompressionManager/regextools"
-	"MediaCompressionManager/scanner"
-	"MediaCompressionManager/statuschecker"
+	"GoAutoExtractor/compression"
+	"GoAutoExtractor/regextools"
+	"GoAutoExtractor/scanner"
+	"GoAutoExtractor/statuschecker"
 	"fmt"
 	"log"
 	"os"

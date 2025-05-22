@@ -6,7 +6,7 @@ if [ ! -d "./bin" ]; then
   mkdir bin
 fi
 
-OUTPUT="./bin/MediaCompressionManager"
+OUTPUT="./bin/GoAutoExtractor"
 
 echo "Cleaning up old binary..."
 rm -f "$OUTPUT"
@@ -14,7 +14,7 @@ rm -f "$OUTPUT"
 echo "Building $OUTPUT at $(date +"%Y-%m-%d %H:%M:%S")..."
 go build -o "$OUTPUT" .
 
-echo "Build finished! ✅"
+echo "Build finished!"
 chmod +x $OUTPUT
 
 if [ "$1" == "run" ]; then
