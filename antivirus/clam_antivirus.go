@@ -1,4 +1,4 @@
-package scanner
+package antivirus
 
 import (
 	"os"
@@ -6,9 +6,9 @@ import (
 	"github.com/sheenobu/go-clamscan"
 )
 
-type ClamScanner struct{}
+type ClamAntiVirus struct{}
 
-func (c ClamScanner) ScanFile(path string) (result *ScanResult) {
+func (c ClamAntiVirus) ScanFile(path string) (result *AntiVirusScanResult) {
 
 	options := &clamscan.Options{
 		BinaryLocation: os.Getenv("CLAMSCAN_BINARY"),
@@ -17,7 +17,7 @@ func (c ClamScanner) ScanFile(path string) (result *ScanResult) {
 	sr, cErr := clamscan.Scan(options, path)
 	scanResult := <-sr
 
-	result = &ScanResult{
+	result = &AntiVirusScanResult{
 		Error:            cErr,
 		File:             scanResult.File,
 		VirusDescription: scanResult.Virus,

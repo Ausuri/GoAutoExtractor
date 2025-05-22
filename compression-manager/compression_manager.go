@@ -1,9 +1,9 @@
 package compressionmanager
 
 import (
+	"GoAutoExtractor/antivirus"
 	"GoAutoExtractor/compression"
 	"GoAutoExtractor/regextools"
-	"GoAutoExtractor/scanner"
 	"GoAutoExtractor/statuschecker"
 	"fmt"
 	"log"
@@ -14,7 +14,7 @@ import (
 type CompressionManager struct {
 	extractor     compression.DecompressorInterface
 	regexTool     regextools.RegexToolInterface
-	scanner       scanner.ScannerInterface
+	antivirus     antivirus.AntiVirusInterface
 	statuschecker statuschecker.StatusCheckerInterface
 }
 
@@ -40,7 +40,7 @@ func (cm *CompressionManager) ScanAndDecompressFile(inputFile string) error {
 
 	//Scan the file for viruses.
 	fmt.Println("Scanning compressed file.")
-	scanResult := cm.scanner.ScanFile(inputFile)
+	scanResult := cm.antivirus.ScanFile(inputFile)
 	if scanResult.VirusFound {
 		log.Fatal("Virus found in compressed file:", scanResult.VirusDescription)
 	} else if scanResult.Error != nil {

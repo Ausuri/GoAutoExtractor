@@ -6,7 +6,6 @@
 .rar
 .sz
 .tar
-.tar.gz
 .xz
 .zip
 .zlib

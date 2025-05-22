@@ -1,0 +1,13 @@
+{
+  "clamscan_binary": "/usr/bin/clamscan",
+  "concurrency": 4,
+  "delete_after_extraction": false,
+  "enable_clamscan": false,
+  "enable_syncthing": false,
+  "log_level": "info",
+  "output_path": "~/tmp/",
+  "syncthing_endpoint": "https://localhost:8384",
+  "syncthing_timeout_seconds": 60,
+  "watch_path": "~/",
+  "watch_subfolders": false
+}

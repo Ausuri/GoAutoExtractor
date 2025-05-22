@@ -1,18 +1,18 @@
-package scanner
+package antivirus
 
 import "errors"
 
-type MockScanner struct {
+type MockAntiVirus struct {
 	IsErrorExpected bool
 	IsVirusFound    bool
 }
 
-func (m *MockScanner) ScanFile(path string) *ScanResult {
+func (m *MockAntiVirus) ScanFile(path string) *AntiVirusScanResult {
 
 	var err error
 
 	if m.IsErrorExpected {
-		err = errors.New("Mock scan error.")
+		err = errors.New("mock scan error")
 	} else {
 		err = nil
 	}
@@ -21,12 +21,12 @@ func (m *MockScanner) ScanFile(path string) *ScanResult {
 
 	var virusDescription string
 	if virusFound {
-		virusDescription = "Mock virus found."
+		virusDescription = "mock virus found"
 	} else {
 		virusDescription = ""
 	}
 
-	return &ScanResult{
+	return &AntiVirusScanResult{
 		Error:            err,
 		File:             path,
 		VirusDescription: virusDescription,

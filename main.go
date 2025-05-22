@@ -2,19 +2,51 @@ package main
 
 import (
 	compressionmanager "GoAutoExtractor/compression-manager"
+	"flag"
 	"log"
 	"os"
+
+	"github.com/spf13/viper"
 )
+
+type GoAutoExtractorSettings struct {
+}
 
 func main() {
 
-	inputFile := os.Args[1]
+	runOnce := flag.Bool("once", false, "Run one-time extraction instead of daemon mode")
+	inputFile := flag.String("extract", "", "Manually extract a file and exit")
+
+	viper.SetConfigFile("config.json")
+	viper.AutomaticEnv()
+
 	builder := compressionmanager.NewBuilder()
 	compressionmanager := builder.Build()
-	err := compressionmanager.ScanAndDecompressFile(inputFile)
 
-	if err != nil {
-		log.Fatal("Error during decompression:", err)
+	//If inputFile is set, then we're just decompressing a single file.
+	if (inputFile != nil) && (*inputFile != "") {
+		if _, err := os.Stat(*inputFile); os.IsNotExist(err) {
+			log.Fatal("Input file does not exist:", *inputFile)
+		}
+
+		err := compressionmanager.ScanAndDecompressFile(*inputFile)
+		if err != nil {
+			log.Fatal("Error during decompression:", err)
+		}
+		return
 	}
 
+	if *runOnce {
+		//TODO: Implement run once mode
+		panic("unimplemented")
+	}
+
+	runDaemon(compressionmanager)
+}
+
+func runDaemon(cm *compressionmanager.CompressionManager) {
+
+	for {
+
+	}
 }

@@ -1,0 +1,13 @@
+[Unit]
+Description=GoAutoExtractor Service
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/goautoextractor
+Restart=always
+User=youruser
+Environment=/etc/goautoextractor/.env
+GOEXTRACTOR_CONFIG=/home/youruser/.config/goautoextractor/config.json
+
+[Install]
+WantedBy=multi-user.target

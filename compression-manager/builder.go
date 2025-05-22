@@ -1,16 +1,16 @@
 package compressionmanager
 
 import (
+	"GoAutoExtractor/antivirus"
 	"GoAutoExtractor/compression"
 	"GoAutoExtractor/regextools"
-	"GoAutoExtractor/scanner"
 	"GoAutoExtractor/statuschecker"
 )
 
 type Builder struct {
 	extractor     compression.DecompressorInterface
 	regexTool     regextools.RegexToolInterface
-	scanner       scanner.ScannerInterface
+	antivirus     antivirus.AntiVirusInterface
 	statuschecker statuschecker.StatusCheckerInterface
 }
 
@@ -26,8 +26,8 @@ func (b *Builder) SetExtensionSanitizer(iextension regextools.RegexToolInterface
 	b.regexTool = iextension
 }
 
-func (b *Builder) SetScanner(iscanner scanner.ScannerInterface) {
-	b.scanner = iscanner
+func (b *Builder) SetAntivirus(iscanner antivirus.AntiVirusInterface) {
+	b.antivirus = iscanner
 }
 
 func (b *Builder) SetStatusChecker(istatuschecker statuschecker.StatusCheckerInterface) {
@@ -43,8 +43,8 @@ func (b *Builder) Build() *CompressionManager {
 	if b.regexTool == nil {
 		b.regexTool = &regextools.RegexTool{}
 	}
-	if b.scanner == nil {
-		b.scanner = &scanner.ClamScanner{}
+	if b.antivirus == nil {
+		b.antivirus = &antivirus.ClamAntiVirus{}
 	}
 	if b.statuschecker == nil {
 		b.statuschecker = &statuschecker.SyncthingStatusChecker{}
@@ -53,7 +53,7 @@ func (b *Builder) Build() *CompressionManager {
 	return &CompressionManager{
 		extractor:     b.extractor,
 		regexTool:     b.regexTool,
-		scanner:       b.scanner,
+		antivirus:     b.antivirus,
 		statuschecker: b.statuschecker,
 	}
 }
