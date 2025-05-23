@@ -8,8 +8,6 @@ import (
 	"path/filepath"
 )
 
-var subdirectories []string
-
 func GetSubDirectories(path string) (directoryPathList []string, err error) {
 
 	var subdirectories []string

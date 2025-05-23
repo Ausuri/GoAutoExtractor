@@ -10,16 +10,23 @@ import (
 
 type FSNotifyWatcher struct{}
 
-func (f *FSNotifyWatcher) DetectNewFile(folderPath string, watchSubDirectories bool) (filePath string, err error) {
-	watcher, err := fsnotify.NewWatcher()
-}
+func (f *FSNotifyWatcher) DetectNewFile(folderPath string, watchSubDirectories bool, fileDetected chan<- string) (filePath string, err error) {
 
-func (f *FSNotifyWatcher) DetectNewFolder(folderPath string, watchSubDirectories bool) (newolderPath string, err error) {
-	watcher, err := fsnotify.NewWatcher()
+	watcher := initializeWatcher(folderPath, watchSubDirectories)
 
 }
 
-func (f *FSNotifyWatcher) initializeWatcher(folderPath string, watchSubDirectories bool) *fsnotify.Watcher {
+func (f *FSNotifyWatcher) DetectNewFolder(folderPath string, watchSubDirectories bool, directoryDetected chan<- string) (newFolderPath string, err error) {
+
+	watcher := initializeWatcher(folderPath, watchSubDirectories)
+
+	if event := <-watcher.Events; event.Op == fsnotify.Create {
+
+	}
+
+}
+
+func initializeWatcher(folderPath string, watchSubDirectories bool) *fsnotify.Watcher {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Fatal(err)
@@ -34,6 +41,7 @@ func (f *FSNotifyWatcher) initializeWatcher(folderPath string, watchSubDirectori
 	}
 
 	if watchSubDirectories {
+
 		// Watch all subdirectories
 		err = filepath.Walk(dirToWatch, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
@@ -47,6 +55,7 @@ func (f *FSNotifyWatcher) initializeWatcher(folderPath string, watchSubDirectori
 			}
 			return nil
 		})
+
 		if err != nil {
 			log.Fatal(err)
 		}
