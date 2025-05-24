@@ -1,6 +1,7 @@
 package filewatch
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/fsnotify/fsnotify"
@@ -12,12 +13,56 @@ func (f *FSNotifyWatcher) DetectNewFile(folderPath string, watchSubDirectories b
 
 	watcher := initializeWatcher(folderPath, watchSubDirectories)
 
+	//TODO: Add a way to stop the watcher gracefully.
+	go func() {
+		for {
+			if event := <-watcher.Events; event.Op == fsnotify.Create {
+
+				eventType, evErr := GetEventType(event.Name)
+				if evErr != nil {
+					log.Println("Error getting event type:", evErr)
+					continue
+				}
+
+				if eventType != CreateFile {
+					continue
+				}
+
+				fmt.Println("Created file:", event.Name)
+				fileDetected <- event.Name
+			}
+		}
+	}()
+
 	return nil
 }
 
 func (f *FSNotifyWatcher) DetectNewFolder(folderPath string, watchSubDirectories bool, directoryDetected chan<- string) error {
 
-	panic("unimplemented")
+	watcher := initializeWatcher(folderPath, watchSubDirectories)
+
+	//TODO: Add a way to stop the watcher gracefully.
+	go func() {
+		for {
+			if event := <-watcher.Events; event.Op == fsnotify.Create {
+
+				eventType, evErr := GetEventType(event.Name)
+				if evErr != nil {
+					log.Println("Error getting event type:", evErr)
+					continue
+				}
+
+				if eventType != CreateDirectory {
+					continue
+				}
+
+				fmt.Println("Created directory:", event.Name)
+				directoryDetected <- event.Name
+			}
+		}
+	}()
+
+	return nil
 
 }
 
@@ -52,26 +97,4 @@ func initializeWatcher(folderPath string, watchSubDirectories bool) *fsnotify.Wa
 	}
 
 	return watcher
-}
-
-// Watches for new files (or folders) in the specified directory and send the path to the createEvent channel.
-func watchFolder(watcher *fsnotify.Watcher, createEvent chan<- string) {
-
-	for {
-		select {
-		case event, ok := <-watcher.Events:
-			if !ok {
-				return
-			}
-
-			if event.Op&fsnotify.Create == fsnotify.Create {
-				createEvent <- event.Name
-			}
-		case err, ok := <-watcher.Errors:
-			if !ok {
-				return
-			}
-			log.Println("Error:", err)
-		}
-	}
 }

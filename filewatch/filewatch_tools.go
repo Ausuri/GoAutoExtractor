@@ -5,6 +5,7 @@ package filewatch
 
 import (
 	"io/fs"
+	"os"
 	"path/filepath"
 )
 
@@ -29,4 +30,21 @@ func GetSubDirectories(path string) (directoryPathList []string, err error) {
 	}
 
 	return subdirectories, nil
+}
+
+func GetEventType(path string) (itemType EventType, err error) {
+
+	info, err := os.Stat(path)
+	if err != nil {
+		return Unknown, err
+	}
+
+	if info.IsDir() {
+		itemType = CreateDirectory
+	} else {
+		itemType = CreateFile
+	}
+
+	return itemType, nil
+
 }
