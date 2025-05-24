@@ -11,6 +11,7 @@ import (
 func GetSubDirectories(path string) (directoryPathList []string, err error) {
 
 	var subdirectories []string
+
 	err = filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err

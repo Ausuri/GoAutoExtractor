@@ -2,31 +2,27 @@ package filewatch
 
 import (
 	"log"
-	"os"
-	"path/filepath"
 
 	"github.com/fsnotify/fsnotify"
 )
 
 type FSNotifyWatcher struct{}
 
-func (f *FSNotifyWatcher) DetectNewFile(folderPath string, watchSubDirectories bool, fileDetected chan<- string) (filePath string, err error) {
+func (f *FSNotifyWatcher) DetectNewFile(folderPath string, watchSubDirectories bool, fileDetected chan<- string) error {
 
 	watcher := initializeWatcher(folderPath, watchSubDirectories)
 
+	return nil
 }
 
-func (f *FSNotifyWatcher) DetectNewFolder(folderPath string, watchSubDirectories bool, directoryDetected chan<- string) (newFolderPath string, err error) {
+func (f *FSNotifyWatcher) DetectNewFolder(folderPath string, watchSubDirectories bool, directoryDetected chan<- string) error {
 
-	watcher := initializeWatcher(folderPath, watchSubDirectories)
-
-	if event := <-watcher.Events; event.Op == fsnotify.Create {
-
-	}
+	panic("unimplemented")
 
 }
 
 func initializeWatcher(folderPath string, watchSubDirectories bool) *fsnotify.Watcher {
+
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Fatal(err)
@@ -41,25 +37,41 @@ func initializeWatcher(folderPath string, watchSubDirectories bool) *fsnotify.Wa
 	}
 
 	if watchSubDirectories {
-
-		// Watch all subdirectories
-		err = filepath.Walk(dirToWatch, func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-			if info.IsDir() {
-				err = watcher.Add(path)
-				if err != nil {
-					log.Fatal(err)
-				}
-			}
-			return nil
-		})
+		subdirectories, err := GetSubDirectories(folderPath)
 
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		for _, subdirectory := range subdirectories {
+			err = watcher.Add(subdirectory)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
 	}
 
 	return watcher
+}
+
+// Watches for new files (or folders) in the specified directory and send the path to the createEvent channel.
+func watchFolder(watcher *fsnotify.Watcher, createEvent chan<- string) {
+
+	for {
+		select {
+		case event, ok := <-watcher.Events:
+			if !ok {
+				return
+			}
+
+			if event.Op&fsnotify.Create == fsnotify.Create {
+				createEvent <- event.Name
+			}
+		case err, ok := <-watcher.Errors:
+			if !ok {
+				return
+			}
+			log.Println("Error:", err)
+		}
+	}
 }

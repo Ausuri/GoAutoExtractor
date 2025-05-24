@@ -5,6 +5,8 @@ import (
 	"flag"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/spf13/viper"
 )
@@ -12,7 +14,13 @@ import (
 type GoAutoExtractorSettings struct {
 }
 
+// This is a channel to signal the application to exit to all listeners in go routines.
+var appExitChannel = make(chan struct{})
+
 func main() {
+
+	var signalChannel = make(chan os.Signal, 1)
+	signal.Notify(signalChannel, syscall.SIGKILL, syscall.SIGTERM, syscall.SIGSTOP, syscall.SIGABRT, syscall.SIGQUIT)
 
 	runOnce := flag.Bool("once", false, "Run one-time extraction instead of daemon mode")
 	inputFile := flag.String("extract", "", "Manually extract a file and exit")
