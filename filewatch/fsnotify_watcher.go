@@ -9,7 +9,7 @@ import (
 
 type FSNotifyWatcher struct{}
 
-func (f *FSNotifyWatcher) DetectNewFile(folderPath string, watchSubDirectories bool, fileDetected chan<- string) error {
+func (f *FSNotifyWatcher) MonitorCreatedFiles(folderPath string, watchSubDirectories bool, fileDetected chan<- string) error {
 
 	watcher := initializeWatcher(folderPath, watchSubDirectories)
 
@@ -37,7 +37,7 @@ func (f *FSNotifyWatcher) DetectNewFile(folderPath string, watchSubDirectories b
 	return nil
 }
 
-func (f *FSNotifyWatcher) DetectNewFolder(folderPath string, watchSubDirectories bool, directoryDetected chan<- string) error {
+func (f *FSNotifyWatcher) MonitorCreatedDirectories(folderPath string, watchSubDirectories bool, directoryDetected chan<- string) error {
 
 	watcher := initializeWatcher(folderPath, watchSubDirectories)
 

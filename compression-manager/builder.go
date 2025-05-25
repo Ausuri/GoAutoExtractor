@@ -3,12 +3,16 @@ package compressionmanager
 import (
 	"GoAutoExtractor/antivirus"
 	"GoAutoExtractor/compression"
+	configmanager "GoAutoExtractor/config-manager"
+	"GoAutoExtractor/filewatch"
 	"GoAutoExtractor/regextools"
 	"GoAutoExtractor/statuschecker"
 )
 
 type Builder struct {
+	configManager configmanager.ConfigManagerBase
 	extractor     compression.DecompressorInterface
+	filewatcher   filewatch.FileWatcherInterface
 	regexTool     regextools.RegexToolInterface
 	antivirus     antivirus.AntiVirusInterface
 	statuschecker statuschecker.StatusCheckerInterface
@@ -18,12 +22,20 @@ func NewBuilder() *Builder {
 	return &Builder{}
 }
 
+func (b *Builder) SetConfigManager(imanager configmanager.ConfigManagerBase) {
+	b.configManager = imanager
+}
+
 func (b *Builder) SetDecompressor(iextractor compression.DecompressorInterface) {
 	b.extractor = iextractor
 }
 
 func (b *Builder) SetExtensionSanitizer(iextension regextools.RegexToolInterface) {
 	b.regexTool = iextension
+}
+
+func (b *Builder) SetFileWatcher(ifilewatcher filewatch.FileWatcherInterface) {
+	b.filewatcher = ifilewatcher
 }
 
 func (b *Builder) SetAntivirus(iscanner antivirus.AntiVirusInterface) {
@@ -40,6 +52,9 @@ func (b *Builder) Build() *CompressionManager {
 	if b.extractor == nil {
 		b.extractor = &compression.HashigoExtractor{}
 	}
+	if b.filewatcher == nil {
+		b.filewatcher = &filewatch.FSNotifyWatcher{}
+	}
 	if b.regexTool == nil {
 		b.regexTool = &regextools.RegexTool{}
 	}
@@ -52,6 +67,7 @@ func (b *Builder) Build() *CompressionManager {
 
 	return &CompressionManager{
 		extractor:     b.extractor,
+		filewatcher:   b.filewatcher,
 		regexTool:     b.regexTool,
 		antivirus:     b.antivirus,
 		statuschecker: b.statuschecker,

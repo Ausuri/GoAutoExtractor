@@ -6,7 +6,7 @@ if [ ! -d "./bin" ]; then
   mkdir bin
 fi
 
-OUTPUT="./bin/GoAutoExtractor"
+OUTPUT="./bin/goex"
 
 echo "Cleaning up old binary..."
 rm -f "$OUTPUT"

@@ -3,6 +3,8 @@ package compressionmanager
 import (
 	"GoAutoExtractor/antivirus"
 	"GoAutoExtractor/compression"
+	configmanager "GoAutoExtractor/config-manager"
+	"GoAutoExtractor/filewatch"
 	"GoAutoExtractor/regextools"
 	"GoAutoExtractor/statuschecker"
 	"fmt"
@@ -12,17 +14,58 @@ import (
 )
 
 type CompressionManager struct {
-	extractor     compression.DecompressorInterface
-	regexTool     regextools.RegexToolInterface
 	antivirus     antivirus.AntiVirusInterface
+	configManager configmanager.ConfigManagerBase
+	extractor     compression.DecompressorInterface
+	filewatcher   filewatch.FileWatcherInterface
+	regexTool     regextools.RegexToolInterface
 	statuschecker statuschecker.StatusCheckerInterface
+
+	UserConfig *configmanager.JSONConfig
 }
 
 const DEFAULT_TIMEOUT_SECONDS = 60
 
+var StopMonitor chan<- bool
+
 func NewCompressionManager(builder *Builder) *CompressionManager {
 	cm := builder.Build()
 	return cm
+}
+
+func (cm *CompressionManager) RunMonitor() error {
+
+	fileCreatedChannel := make(chan string)
+
+	go func() {
+		for {
+			select {
+			case StopMonitor <- true:
+				fmt.Println("Stopping monitor.")
+				return
+			case newFile := <-fileCreatedChannel:
+				fmt.Println("New file detected:", newFile)
+			}
+		}
+	}()
+
+	watchpathSetting, err := cm.configManager.GetSetting("watch_path")
+	if err != nil {
+		log.Fatal("Error getting watch path from config:", err)
+	}
+
+	watchSubDirectoriesSetting, err := cm.configManager.GetSetting("watch_subfolders")
+	if err != nil {
+		log.Fatal("Error getting watch_subfolders setting from config:", err)
+	}
+
+	//Convert settings from any to their expected types.
+	pathToWatch, _ := watchpathSetting.(string)
+	watchSubDirectories, _ := watchSubDirectoriesSetting.(bool)
+
+	go cm.filewatcher.MonitorCreatedFiles(pathToWatch, watchSubDirectories, fileCreatedChannel)
+
+	return nil
 }
 
 func (cm *CompressionManager) ScanAndDecompressFile(inputFile string) error {
