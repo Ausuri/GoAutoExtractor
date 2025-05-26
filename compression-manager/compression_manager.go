@@ -30,20 +30,6 @@ func NewCompressionManager(builder *Builder) *CompressionManager {
 
 func (cm *CompressionManager) RunMonitor() (*filewatch.FileWatcherChannels, error) {
 
-	fileCreatedChannel := make(chan string)
-
-	go func() {
-		for {
-			select {
-			case StopMonitor <- true:
-				fmt.Println("Stopping monitor.")
-				return
-			case newFile := <-fileCreatedChannel:
-				fmt.Println("New file detected:", newFile)
-			}
-		}
-	}()
-
 	//Convert settings from any to their expected types.
 	pathToWatch := configmanager.GetSetting[string]("WatchPath")
 	watchSubDirectories := configmanager.GetSetting[bool]("WatchSubfolders")
@@ -61,7 +47,7 @@ func (cm *CompressionManager) ScanAndDecompressFile(inputFile string) error {
 	syncTimeoutSeconds := configmanager.GetSetting[int]("SyncthingTimeoutSeconds")
 
 	//Wait for the sync to finish before continuing.
-	fmt.Println("Waiting for folder to finish syncing.")
+	fmt.Println("Waiting for folder to finish syncing")
 	if err := cm.statuschecker.WaitForSync(folderID, syncTimeoutSeconds); err != nil {
 		return err
 	}

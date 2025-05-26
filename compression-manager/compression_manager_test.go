@@ -32,22 +32,23 @@ func initializeCompressionManagerTesting(settingsOverrideMap map[string]any) *Co
 	unitTestConfig := configmanager.CreateTestConfig()
 	settingsMap := utils.GetObjectMap(unitTestConfig)
 
-	if settingsOverrideMap != nil && len(settingsOverrideMap) > 0 {
+	if len(settingsOverrideMap) > 0 {
 		for key, value := range settingsOverrideMap {
 			settingsMap[key] = value
 		}
 	}
 
-	configmanager.InitializeTestConfigManager(nil)
+	configmanager.InitializeTestConfigManager(settingsMap)
 
 	//Build a tester with default mock interfaces.
 	cm := buildMockTester()
 	return cm
 }
 
-func TestRunMonitor(t *testing.T) {
+func TestRunMonitorFile(t *testing.T) {
 
 	tester := initializeCompressionManagerTesting(nil)
+	tester.filewatcher = &filewatch.MockFileWatcher{}
 	channels, err := tester.RunMonitor()
 
 	if err != nil {
@@ -66,7 +67,7 @@ func TestRunMonitor(t *testing.T) {
 func TestScanAndDecompressFile(t *testing.T) {
 
 	tester := initializeCompressionManagerTesting(nil)
-	err := tester.ScanAndDecompressFile("/tmp/nothing")
+	err := tester.ScanAndDecompressFile("/tmp/nothing/archive.zip")
 
 	if err != nil {
 		t.Fatalf("error occurred in ScanAndDecompressFile %v", err)

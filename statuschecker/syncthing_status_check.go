@@ -34,7 +34,7 @@ func (s SyncthingStatusChecker) WaitForSync(folderID string, timeoutSeconds int)
 		}
 	}
 
-	return fmt.Errorf("timeout waiting for sync to finish.")
+	return fmt.Errorf("timeout waiting for sync to finish")
 }
 
 func pollStatus(url string, apiKey string) (isSynced bool, err error) {
