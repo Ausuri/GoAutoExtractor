@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 )
 
-func GetSubDirectories(path string) (directoryPathList []string, err error) {
+func getSubDirectories(path string) (directoryPathList []string, err error) {
 
 	var subdirectories []string
 
@@ -32,11 +32,11 @@ func GetSubDirectories(path string) (directoryPathList []string, err error) {
 	return subdirectories, nil
 }
 
-func GetEventType(path string) (itemType EventType, err error) {
+func getEventType(path string) (itemType EventType, err error) {
 
 	info, err := os.Stat(path)
 	if err != nil {
-		return Unknown, err
+		return UnknownEventType, err
 	}
 
 	if info.IsDir() {

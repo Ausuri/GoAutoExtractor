@@ -3,14 +3,12 @@ package compressionmanager
 import (
 	"GoAutoExtractor/antivirus"
 	"GoAutoExtractor/compression"
-	configmanager "GoAutoExtractor/config-manager"
 	"GoAutoExtractor/filewatch"
 	"GoAutoExtractor/regextools"
 	"GoAutoExtractor/statuschecker"
 )
 
 type Builder struct {
-	configManager configmanager.ConfigManagerBase
 	extractor     compression.DecompressorInterface
 	filewatcher   filewatch.FileWatcherInterface
 	regexTool     regextools.RegexToolInterface
@@ -20,10 +18,6 @@ type Builder struct {
 
 func NewBuilder() *Builder {
 	return &Builder{}
-}
-
-func (b *Builder) SetConfigManager(imanager configmanager.ConfigManagerBase) {
-	b.configManager = imanager
 }
 
 func (b *Builder) SetDecompressor(iextractor compression.DecompressorInterface) {
@@ -66,10 +60,10 @@ func (b *Builder) Build() *CompressionManager {
 	}
 
 	return &CompressionManager{
+		antivirus:     b.antivirus,
 		extractor:     b.extractor,
 		filewatcher:   b.filewatcher,
 		regexTool:     b.regexTool,
-		antivirus:     b.antivirus,
 		statuschecker: b.statuschecker,
 	}
 }

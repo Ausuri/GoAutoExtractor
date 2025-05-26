@@ -1,103 +1,107 @@
 package configmanager
 
 import (
-	"GoAutoExtractor/utils"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 
-	"github.com/joho/godotenv"
+	"GoAutoExtractor/utils"
 )
 
-type ConfigManagerBase struct {
-	settings   ConfigObjects
-	GetSetting func(settingName string) (any, error)
+type appConfigManager struct {
+	configManager  configManagerInterface
+	configLocation configLocationInterface
 }
 
-const DEFAULT_CONFIG_PATH = "/etc/goautoextractor/default_config.json"
-const ENVIRONMENT_CONFIG_PATH = "/etc/goautoextractor/environment_config.json"
-const USER_CONFIG_PATH = "/etc/goautoextractor/config.json"
+var appConfig *appConfigManager
 
-// New creates a new instance of ConfigManagerBase, loading the user, default, and environment configurations. onInit is an optional constructor action that can be passed in.
-func (cmb *ConfigManagerBase) New(onInit func(c *ConfigManagerBase)) *ConfigManagerBase {
-
-	var userConfigError, defaultConfigError, environmentConfigError error
-	cmb.settings.userConfig, userConfigError = cmb.loadJSONFromFile(USER_CONFIG_PATH)
-	if userConfigError != nil {
-		log.Fatal(fmt.Printf("Error loading user config: %v", userConfigError))
-	}
-
-	cmb.settings.defaultConfig, defaultConfigError = cmb.loadJSONFromFile(DEFAULT_CONFIG_PATH)
-	if defaultConfigError != nil {
-		log.Fatal(fmt.Printf("Error loading default config: %v", defaultConfigError))
-	}
-
-	cmb.settings.envConfig, environmentConfigError = cmb.mapEnvironmentFile(ENVIRONMENT_CONFIG_PATH)
-	if environmentConfigError != nil {
-		log.Fatal(fmt.Printf("Error loading environment config: %v", environmentConfigError))
-	}
-
-	cmb.createMapFromConfigObjects()
-
-	//Run any custom initialization function passed in.
-	if onInit != nil {
-		onInit(cmb)
-	}
-
-	return cmb
+// The most important function regarding config files - This must be called at the start of the app (or integration tests)
+func InitializeConfig(configType ConfigManagerType) {
+	appConfig = intializeAppConfig(configType)
 }
 
-// Maps the environment variables to an object.
-func (cmb *ConfigManagerBase) mapEnvironmentFile(environmentFilePath string) (*EnvironmentConfig, error) {
+// Does a type conversion using the configManager interface provided to grab the setting.
+func GetSetting[T Primitive](settingName string) T {
 
-	envMap, err := godotenv.Read(environmentFilePath)
+	var zero T
+
+	setting, err := appConfig.configManager.getSetting(settingName)
 	if err != nil {
-		return nil, err
+		fmt.Printf("Error getting setting: %s", settingName)
+		return zero
 	}
 
-	//TODO: May need to map the config files dynamically if this list gets large.
-	cmb.settings.envConfig.OutputPath = envMap["OUTPUT_DIR"]
-	cmb.settings.envConfig.SyncthingAPIKey = envMap["SYNCTHING_API_KEY"]
-	cmb.settings.envConfig.SyncthingFolderID = envMap["SYNCTHING_FOLDER_ID"]
-	cmb.settings.envConfig.SyncthingAPIEndpoint = envMap["SYNCTHING_API_ENDPOINT"]
-
-	return cmb.settings.envConfig, nil
-}
-
-func (cmb *ConfigManagerBase) loadJSONFromFile(filePath string) (*JSONConfig, error) {
-
-	// Open the file
-	file, err := os.ReadFile(filePath)
-	if err != nil {
-		return nil, err
+	value, ok := setting.(T)
+	if !ok {
+		fmt.Printf("Error converting setting: %s", settingName)
+		return zero
 	}
 
-	// Parse file to JSON object.
-	var configJson JSONConfig
-	errJ := json.Unmarshal(file, &configJson)
-	if errJ != nil {
-		return nil, errJ
-	}
-
-	return &configJson, nil
+	return value
 }
 
 // Maps JSON file objects to maps for key reference. JSON files must be instantiated before calling this.
-func (cmb *ConfigManagerBase) createMapFromConfigObjects() error {
+func (cf *configObjects) createMapFromConfigObjects() error {
 
-	if cmb.settings.defaultConfig == nil || cmb.settings.envConfig == nil {
+	if cf.defaultConfig == nil || cf.envConfig == nil {
 		return errors.New("createMapFromConfigObjects(): config files have not been set")
 	}
 
-	cmb.settings.defaultConfigMap = utils.GetObjectMap(cmb.settings.defaultConfig)
-	cmb.settings.envConfigMap = utils.GetObjectMap(cmb.settings.envConfig)
+	cf.defaultConfigMap = utils.GetObjectMap(cf.defaultConfig)
+	cf.envConfigMap = utils.GetObjectMap(cf.envConfig)
 
 	//User config file is allowed to be null.
-	if cmb.settings.userConfig != nil {
-		cmb.settings.userConfigMap = utils.GetObjectMap(cmb.settings.userConfig)
+	if cf.userConfig != nil {
+		cf.userConfigMap = utils.GetObjectMap(cf.userConfig)
 	}
 
 	return nil
+}
+
+func intializeAppConfig(configType ConfigManagerType) *appConfigManager {
+
+	acm := appConfigManager{}
+	var useDevPaths bool
+	devEnvPath := os.Getenv("USE_DEV_CONFIG_PATHS")
+
+	if devEnvPath != "" {
+		var dErr error
+		useDevPaths, dErr = strconv.ParseBool(devEnvPath)
+		if dErr != nil {
+			log.Print("error parsing dev path environment field")
+			useDevPaths = false
+		}
+	} else {
+		useDevPaths = false
+	}
+
+	if useDevPaths {
+		acm.configLocation = &configDevLocation{}
+	} else {
+		acm.configLocation = &configLocationProduction{}
+	}
+
+	var initErr error
+	var cObj *configObjects
+	configFilePaths := acm.configLocation.getPaths()
+	cObj, initErr = loadAllConfigs(configFilePaths)
+
+	if initErr != nil {
+		log.Fatalf("error initializing config file: %v", initErr)
+	}
+
+	switch configType {
+	case ConfigManagerType(UnknownConfigManagerType):
+		acm.configManager = &goexConfigManager{settings: cObj}
+	case ConfigManagerType(GoexConfigManagerType):
+		acm.configManager = &goexConfigManager{settings: cObj}
+	case ConfigManagerType(ViperConfigManagerType):
+		acm.configManager = &configManagerViper{}
+	default:
+		acm.configManager = &goexConfigManager{settings: cObj}
+	}
+
+	return &acm
 }

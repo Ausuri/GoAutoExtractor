@@ -5,11 +5,11 @@ import (
 	"fmt"
 )
 
-type GoexConfigManager struct {
-	settings *ConfigObjects
+type goexConfigManager struct {
+	settings *configObjects
 }
 
-func (gcm *GoexConfigManager) GetSetting(settingName string) (any, error) {
+func (gcm *goexConfigManager) getSetting(settingName string) (any, error) {
 
 	if gcm.settings.defaultConfigMap == nil || gcm.settings.envConfigMap == nil {
 		return nil, errors.New("config not initialized")

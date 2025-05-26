@@ -9,19 +9,14 @@ import (
 	"GoAutoExtractor/statuschecker"
 	"fmt"
 	"log"
-	"os"
-	"strconv"
 )
 
 type CompressionManager struct {
 	antivirus     antivirus.AntiVirusInterface
-	configManager configmanager.ConfigManagerBase
 	extractor     compression.DecompressorInterface
 	filewatcher   filewatch.FileWatcherInterface
 	regexTool     regextools.RegexToolInterface
 	statuschecker statuschecker.StatusCheckerInterface
-
-	UserConfig *configmanager.JSONConfig
 }
 
 const DEFAULT_TIMEOUT_SECONDS = 60
@@ -33,7 +28,7 @@ func NewCompressionManager(builder *Builder) *CompressionManager {
 	return cm
 }
 
-func (cm *CompressionManager) RunMonitor() error {
+func (cm *CompressionManager) RunMonitor() (*filewatch.FileWatcherChannels, error) {
 
 	fileCreatedChannel := make(chan string)
 
@@ -49,31 +44,21 @@ func (cm *CompressionManager) RunMonitor() error {
 		}
 	}()
 
-	watchpathSetting, err := cm.configManager.GetSetting("watch_path")
-	if err != nil {
-		log.Fatal("Error getting watch path from config:", err)
-	}
-
-	watchSubDirectoriesSetting, err := cm.configManager.GetSetting("watch_subfolders")
-	if err != nil {
-		log.Fatal("Error getting watch_subfolders setting from config:", err)
-	}
-
 	//Convert settings from any to their expected types.
-	pathToWatch, _ := watchpathSetting.(string)
-	watchSubDirectories, _ := watchSubDirectoriesSetting.(bool)
+	pathToWatch := configmanager.GetSetting[string]("WatchPath")
+	watchSubDirectories := configmanager.GetSetting[bool]("WatchSubfolders")
 
-	go cm.filewatcher.MonitorCreatedFiles(pathToWatch, watchSubDirectories, fileCreatedChannel)
+	channels := cm.filewatcher.MonitorCreatedFiles(pathToWatch, watchSubDirectories)
 
-	return nil
+	return channels, nil
 }
 
 func (cm *CompressionManager) ScanAndDecompressFile(inputFile string) error {
 
-	folderID := os.Getenv("FOLDER_ID")
+	folderID := configmanager.GetSetting[string]("SyncthingFolderID")
 	sanitizedFileName := cm.regexTool.RemoveExtension(inputFile)
 	outputDir := sanitizedFileName
-	syncTimeoutSeconds := getSyncTimeoutSetting()
+	syncTimeoutSeconds := configmanager.GetSetting[int]("SyncthingTimeoutSeconds")
 
 	//Wait for the sync to finish before continuing.
 	fmt.Println("Waiting for folder to finish syncing.")
@@ -101,24 +86,4 @@ func (cm *CompressionManager) ScanAndDecompressFile(inputFile string) error {
 	fmt.Println(logEntry)
 
 	return nil
-}
-
-func getSyncTimeoutSetting() int {
-
-	syncTimeoutSecondsStr := os.Getenv("SYNC_TIMEOUT_SECONDS")
-	var timeoutSeconds int
-
-	if syncTimeoutSecondsStr == "" {
-		timeoutSeconds = DEFAULT_TIMEOUT_SECONDS
-	} else {
-		var err error
-		timeoutSeconds, err = strconv.Atoi(syncTimeoutSecondsStr)
-
-		if err != nil {
-			log.Fatal("Invalid SYNC_TIMEOUT_SECONDS:", err)
-			timeoutSeconds = DEFAULT_TIMEOUT_SECONDS
-		}
-	}
-
-	return timeoutSeconds
 }

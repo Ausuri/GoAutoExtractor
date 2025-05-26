@@ -9,12 +9,14 @@ import (
 	"github.com/spf13/viper"
 )
 
-type ConfigManagerViper struct {
-	vpr      *viper.Viper
-	settings ConfigObjects
+type configManagerViper struct {
+	configPaths *configFilePaths
+	settings    configObjects
+	vpr         *viper.Viper
 }
 
-func (v *ConfigManagerViper) Init() *ConfigManagerViper {
+func (v *configManagerViper) Init(configPaths *configFilePaths) *configManagerViper {
+	v.configPaths = configPaths
 	err := v.createViperInstance()
 	if err != nil {
 		log.Fatal(err)
@@ -22,7 +24,7 @@ func (v *ConfigManagerViper) Init() *ConfigManagerViper {
 	return v
 }
 
-func (v *ConfigManagerViper) GetSetting(settingName string) (any, error) {
+func (v *configManagerViper) getSetting(settingName string) (any, error) {
 
 	if v.vpr == nil {
 		v.createViperInstance()
@@ -37,13 +39,13 @@ func (v *ConfigManagerViper) GetSetting(settingName string) (any, error) {
 	return settingValue, nil
 }
 
-func (v *ConfigManagerViper) createViperInstance() error {
+func (v *configManagerViper) createViperInstance() error {
 
 	if (v.vpr) != nil {
 		return nil
 	}
 
-	viper.SetConfigFile(USER_CONFIG_PATH)
+	viper.SetConfigFile(v.configPaths.UserConfigPath)
 	v.mapDefaultFieldsToViper()
 	viper.AutomaticEnv()
 
@@ -52,7 +54,7 @@ func (v *ConfigManagerViper) createViperInstance() error {
 	return nil
 }
 
-func (v *ConfigManagerViper) mapDefaultFieldsToViper() {
+func (v *configManagerViper) mapDefaultFieldsToViper() {
 
 	defaultFields := utils.GetObjectMap(v.settings.defaultConfig)
 	for key, value := range defaultFields {

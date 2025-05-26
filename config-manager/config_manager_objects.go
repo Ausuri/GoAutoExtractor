@@ -1,6 +1,6 @@
 package configmanager
 
-type JSONConfig struct {
+type JsonConfig struct {
 	ClamscanBinary          string `json:"clamscan_binary"`
 	Concurrency             int    `json:"concurrency"`
 	DeleteAfterExtraction   bool   `json:"delete_after_extraction"`
@@ -14,18 +14,30 @@ type JSONConfig struct {
 	WatchSubfolders         bool   `json:"watch_subfolders"`
 }
 
-type EnvironmentConfig struct {
+type environmentConfig struct {
+	OutputPath           string
 	SyncthingAPIKey      string
 	SyncthingFolderID    string
 	SyncthingAPIEndpoint string
-	OutputPath           string
+	UseDevConfigPaths    bool
+	WatchPath            string
+	WatchSubfolders      bool
 }
 
-type ConfigObjects struct {
-	defaultConfig    *JSONConfig
+type configObjects struct {
+	defaultConfig    *JsonConfig
 	defaultConfigMap map[string]any
-	envConfig        *EnvironmentConfig
+	envConfig        *environmentConfig
 	envConfigMap     map[string]any
-	userConfig       *JSONConfig
+	userConfig       *JsonConfig
 	userConfigMap    map[string]any
 }
+
+type ConfigManagerType int
+
+const (
+	UnknownConfigManagerType ConfigManagerType = iota
+	MockConfigManagerType
+	GoexConfigManagerType
+	ViperConfigManagerType
+)

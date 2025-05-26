@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/goccy/go-reflect"
 )
@@ -33,4 +34,12 @@ func GetObjectMap(obj interface{}) map[string]any {
 	}
 
 	return result
+}
+
+func PauseMilliseconds(msPauseTime int64) {
+	time.Sleep(time.Duration(msPauseTime) * time.Millisecond)
+}
+
+func PauseSeconds(secondsPauseTime int64) {
+	time.Sleep(time.Duration(secondsPauseTime) * time.Second)
 }
