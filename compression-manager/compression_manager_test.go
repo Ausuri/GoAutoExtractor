@@ -47,8 +47,16 @@ func initializeCompressionManagerTesting(settingsOverrideMap map[string]any) *Co
 
 func TestRunMonitorFile(t *testing.T) {
 
+	stopChannel := make(chan any)
 	tester := initializeCompressionManagerTesting(nil)
-	tester.filewatcher = &filewatch.MockFileWatcher{}
+	tester.filewatcher = &filewatch.MockFileWatcher{
+		DirectoryPathFound: "/tmp/nothing/",
+		FilePathFound:      "/tmp/nothing/archive.zip",
+		LookupMSTime:       250,
+		RoutinePauseMSTime: 500,
+		StopRoutines:       stopChannel,
+		ThrowError:         false,
+	}
 	channels, err := tester.RunMonitor()
 
 	if err != nil {
@@ -61,6 +69,8 @@ func TestRunMonitorFile(t *testing.T) {
 	case chError := <-channels.Error:
 		t.Fatalf("Received channel error %v", chError)
 	}
+
+	stopChannel <- true //Stop the mock watcher.
 
 }
 

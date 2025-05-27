@@ -2,6 +2,8 @@ package main
 
 import (
 	compressionmanager "GoAutoExtractor/compression-manager"
+	"GoAutoExtractor/utils"
+	"context"
 	"flag"
 	"log"
 	"os"
@@ -48,12 +50,25 @@ func main() {
 		panic("unimplemented")
 	}
 
-	runDaemon(compressionmanager)
+	ctx, cancel := context.WithCancel(context.Background())
+	cm := compressionmanager
+	runDaemon(ctx, cm)
+
+	osInterruptChannel := make(chan os.Signal, 1)
+	signal.Notify(osInterruptChannel, os.Interrupt, syscall.SIGTERM)
+	<-osInterruptChannel
+	log.Println("Received interrupt signal, shutting down...")
+	cancel() // Cancel the context to stop the daemon
+
+	utils.PauseSeconds(1)
 }
 
-func runDaemon(cm *compressionmanager.CompressionManager) {
+func runDaemon(ctx context.Context, cm *compressionmanager.CompressionManager) {
 
 	for {
-
+		select {
+		case <-ctx.Done():
+			return
+		}
 	}
 }

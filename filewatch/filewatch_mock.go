@@ -4,13 +4,12 @@ import (
 	"GoAutoExtractor/utils"
 	"errors"
 	"fmt"
-	"time"
 )
 
 type MockFileWatcher struct {
 	DirectoryPathFound string
 	FilePathFound      string
-	LookupMSTime       int
+	LookupMSTime       int64
 	RoutinePauseMSTime int64
 	StopRoutines       chan any
 	ThrowError         bool
@@ -52,11 +51,11 @@ func (mfw *MockFileWatcher) runMonitorMock(eventType EventType) *FileWatcherChan
 
 			if eventType == CreateDirectory {
 				fmt.Printf("mock directory watcher -> sleeping for %d milliseconds", mfw.LookupMSTime)
-				time.Sleep(time.Duration(mfw.LookupMSTime))
+				utils.PauseMilliseconds(mfw.LookupMSTime)
 				eventChannel <- mfw.DirectoryPathFound
 			} else if eventType == CreateFile {
 				fmt.Printf("mock file watcher -> sleeping for %d milliseconds", mfw.LookupMSTime)
-				time.Sleep(time.Duration(mfw.LookupMSTime))
+				utils.PauseMilliseconds(mfw.LookupMSTime)
 				eventChannel <- mfw.FilePathFound
 			}
 
