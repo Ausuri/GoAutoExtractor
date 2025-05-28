@@ -3,6 +3,7 @@
 .bz2
 .gz
 .lz4
+.r00
 .rar
 .sz
 .tar
