@@ -1,8 +1,7 @@
 package regextools
 
 import (
-	"GoAutoExtractor/utils"
-	"fmt"
+	configmanager "GoAutoExtractor/config-manager"
 	"regexp"
 	"slices"
 )
@@ -23,10 +22,7 @@ func (r RegexTool) RemoveExtension(fileName string) string {
 
 func (r RegexTool) VerifyValidArchive(fileName string) (isValid bool) {
 
-	fileExtensionSlice, err := utils.GetSupportedFileExtensions()
-	if err != nil {
-		panic(fmt.Sprintf("valid archive retrievel of file extension list error: %v", err))
-	}
+	fileExtensionSlice := configmanager.GetAllowedExtensions()
 
 	//TODO: Implement a regex string that also uses the AllowedExtensions.txt to verify extensions.
 	tarballRegex := regexp.MustCompile(`\.tar\.\S{2,3}$`)
@@ -36,7 +32,9 @@ func (r RegexTool) VerifyValidArchive(fileName string) (isValid bool) {
 	archiveExtension := fileExtensionRegex.FindString(fileName)
 
 	if tarballExtension != "" {
-		isValid = slices.Contains(fileExtensionSlice, tarballExtension)
+		extensionSplitRegex := regexp.MustCompile(`\.\w{2,4}`)
+		extSlice := extensionSplitRegex.FindAllString(tarballExtension, -1)
+		isValid = (extSlice[0] == ".tar") && slices.Contains(fileExtensionSlice, extSlice[1])
 	} else if archiveExtension != "" {
 		isValid = slices.Contains(fileExtensionSlice, archiveExtension)
 	}

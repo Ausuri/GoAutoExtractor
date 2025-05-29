@@ -14,7 +14,7 @@ type JsonConfig struct {
 	WatchSubfolders         bool   `json:"watch_subfolders"`
 }
 
-type environmentConfig struct {
+type EnvironmentConfig struct {
 	OutputPath           string
 	SyncthingAPIKey      string
 	SyncthingFolderID    string
@@ -25,12 +25,13 @@ type environmentConfig struct {
 }
 
 type configObjects struct {
-	defaultConfig    *JsonConfig
-	defaultConfigMap map[string]any
-	envConfig        *environmentConfig
-	envConfigMap     map[string]any
-	userConfig       *JsonConfig
-	userConfigMap    map[string]any
+	allowedExtensions []string
+	defaultConfig     *JsonConfig
+	defaultConfigMap  map[string]any
+	envConfig         *EnvironmentConfig
+	envConfigMap      map[string]any
+	userConfig        *JsonConfig
+	userConfigMap     map[string]any
 }
 
 type ConfigManagerType int

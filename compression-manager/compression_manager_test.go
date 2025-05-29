@@ -7,7 +7,6 @@ import (
 	"GoAutoExtractor/filewatch"
 	"GoAutoExtractor/regextools"
 	"GoAutoExtractor/statuschecker"
-	"GoAutoExtractor/utils"
 	"fmt"
 	"testing"
 )
@@ -29,16 +28,7 @@ func buildMockTester() *CompressionManager {
 // Loads config files and sets up a CompressionManager for testing. The settings parameter is optional, use if your unit test requires specific config settings.
 func initializeCompressionManagerTesting(settingsOverrideMap map[string]any) *CompressionManager {
 
-	unitTestConfig := configmanager.CreateTestConfig()
-	settingsMap := utils.GetObjectMap(unitTestConfig)
-
-	if len(settingsOverrideMap) > 0 {
-		for key, value := range settingsOverrideMap {
-			settingsMap[key] = value
-		}
-	}
-
-	configmanager.InitializeTestConfigManager(settingsMap)
+	configmanager.InitializeTestConfig(settingsOverrideMap)
 
 	//Build a tester with default mock interfaces.
 	cm := buildMockTester()

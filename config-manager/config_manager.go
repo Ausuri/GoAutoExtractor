@@ -11,8 +11,9 @@ import (
 )
 
 type appConfigManager struct {
-	configManager  configManagerInterface
 	configLocation configLocationInterface
+	configManager  configManagerInterface
+	configObjects  *configObjects
 }
 
 var appConfig *appConfigManager
@@ -20,6 +21,11 @@ var appConfig *appConfigManager
 // The most important function regarding config files - This must be called at the start of the app (or integration tests)
 func InitializeConfig(configType ConfigManagerType) {
 	appConfig = intializeAppConfig(configType)
+}
+
+func GetAllowedExtensions() []string {
+	acceptedExtensions := appConfig.configObjects.allowedExtensions
+	return acceptedExtensions
 }
 
 // Does a type conversion using the configManager interface provided to grab the setting.
