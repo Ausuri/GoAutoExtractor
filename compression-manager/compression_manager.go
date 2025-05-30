@@ -68,7 +68,7 @@ func (cm *CompressionManager) ScanAndDecompressFile(inputFile string) error {
 	}
 
 	//TODO: Move the file to the output directory and possibly delete it.
-	logEntry := fmt.Sprintf("File %s has been extracted to %s.", inputFile, outputDir)
+	logEntry := fmt.Sprintf("File %v has been extracted to %v.", inputFile, outputDir)
 	fmt.Println(logEntry)
 
 	return nil
