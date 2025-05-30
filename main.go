@@ -24,7 +24,13 @@ func main() {
 	godotenv.Load()
 
 	var signalChannel = make(chan os.Signal, 1)
-	signal.Notify(signalChannel, syscall.SIGKILL, syscall.SIGTERM, syscall.SIGSTOP, syscall.SIGABRT, syscall.SIGQUIT)
+	signal.Notify(signalChannel, syscall.SIGTERM, syscall.SIGABRT, syscall.SIGQUIT)
+
+	// Setup our channel to close the application when needed.
+	go func() {
+		<-signalChannel
+		close(appExitChannel)
+	}()
 
 	runOnce := flag.Bool("once", false, "Run one-time extraction instead of daemon mode")
 	inputFile := flag.String("extract", "", "Manually extract a file and exit")
@@ -65,10 +71,16 @@ func main() {
 
 func runDaemon(ctx context.Context, cm *compressionmanager.CompressionManager) {
 
-	for {
+	channels, err := cm.RunMonitor()
+	if err != nil {
+		panic("Could not create channels")
+	}
+
+	for range ctx.Done() {
+
 		select {
-		case <-ctx.Done():
-			return
+		case file := <-channels.EventDetected:
+
 		}
 	}
 }
