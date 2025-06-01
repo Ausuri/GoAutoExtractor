@@ -9,29 +9,56 @@ import (
 
 type FSNotifyWatcher struct{}
 
+type runMonitorArgs struct {
+	errorChannel        chan error
+	eventChannel        chan string
+	eventType           EventType
+	folderPath          string
+	watchSubDirectories bool
+}
+
 func (f *FSNotifyWatcher) MonitorCreatedFiles(folderPath string, watchSubDirectories bool) *FileWatcherChannels {
 
-	result := runMonitor(folderPath, watchSubDirectories, EventType(CreateFile))
-	return result
+	runArgs := runMonitorArgs{
+		errorChannel:        make(chan error),
+		eventChannel:        make(chan string),
+		eventType:           CreateFile,
+		folderPath:          folderPath,
+		watchSubDirectories: watchSubDirectories,
+	}
 
+	channels := &FileWatcherChannels{
+		Error:         runArgs.errorChannel,
+		EventDetected: runArgs.eventChannel,
+	}
+
+	go runMonitor(runArgs)
+	return channels
 }
 
 func (f *FSNotifyWatcher) MonitorCreatedDirectories(folderPath string, watchSubDirectories bool) *FileWatcherChannels {
+	runArgs := runMonitorArgs{
+		errorChannel:        make(chan error),
+		eventChannel:        make(chan string),
+		eventType:           CreateDirectory,
+		folderPath:          folderPath,
+		watchSubDirectories: watchSubDirectories,
+	}
 
-	result := runMonitor(folderPath, watchSubDirectories, EventType(CreateDirectory))
-	return result
+	channels := &FileWatcherChannels{
+		Error:         runArgs.errorChannel,
+		EventDetected: runArgs.eventChannel,
+	}
 
+	go runMonitor(runArgs)
+	return channels
 }
 
-func runMonitor(folderPath string, watchSubDirectories bool, eventType EventType) *FileWatcherChannels {
+func runMonitor(args runMonitorArgs) {
 
-	watcher := initializeWatcher(folderPath, watchSubDirectories)
-	eventChannel := make(chan string)
-	errorChannel := make(chan error)
-	channelObj := FileWatcherChannels{
-		Error:         errorChannel,
-		EventDetected: eventChannel,
-	}
+	watcher := initializeWatcher(args.folderPath, args.watchSubDirectories)
+	eventChannel := args.eventChannel
+	errorChannel := args.errorChannel
 
 	//TODO: Add a way to stop the watcher gracefully.
 	go func() {
@@ -41,10 +68,11 @@ func runMonitor(folderPath string, watchSubDirectories bool, eventType EventType
 				evType, evErr := getEventType(event.Name)
 				if evErr != nil {
 					log.Println("Error getting event type:", evErr)
+					errorChannel <- evErr
 					continue
 				}
 
-				if evType != eventType {
+				if evType != args.eventType {
 					continue
 				}
 
@@ -54,7 +82,8 @@ func runMonitor(folderPath string, watchSubDirectories bool, eventType EventType
 		}
 	}()
 
-	return &channelObj
+	// The channel must be blocked indefinitely
+	<-make(chan struct{})
 }
 
 func initializeWatcher(folderPath string, watchSubDirectories bool) *fsnotify.Watcher {

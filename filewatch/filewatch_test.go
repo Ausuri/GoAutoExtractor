@@ -2,6 +2,7 @@ package filewatch
 
 import (
 	"GoAutoExtractor/utils"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -16,6 +17,8 @@ func TestRunMonitorFile(t *testing.T) {
 	tmpDir := t.TempDir()
 	filePath := filepath.Join(tmpDir, "testfile.zip")
 	channels := fsWatcher.MonitorCreatedFiles(tmpDir, true)
+
+	fmt.Printf("Created temporary directory: %s", tmpDir)
 
 	//TODO: The FSNotify interface needs to be refactored to run but also pass back the channels -> see sandbox.
 	go func() {
