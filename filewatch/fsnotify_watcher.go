@@ -7,7 +7,9 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
-type FSNotifyWatcher struct{}
+type FSNotifyWatcher struct {
+	WatcherChannels []*FileWatcherChannels
+}
 
 type runMonitorArgs struct {
 	errorChannel        chan error
@@ -56,14 +58,20 @@ func (f *FSNotifyWatcher) MonitorCreatedDirectories(folderPath string, watchSubD
 
 func runMonitor(args runMonitorArgs) {
 
-	watcher := initializeWatcher(args.folderPath, args.watchSubDirectories)
+	//watcher := initializeWatcher(args.folderPath, args.watchSubDirectories)
 	eventChannel := args.eventChannel
 	errorChannel := args.errorChannel
+
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer watcher.Close()
 
 	//TODO: Add a way to stop the watcher gracefully.
 	go func() {
 		for {
-			if event := <-watcher.Events; event.Op == fsnotify.Create {
+			if event, ok := <-watcher.Events; event.Has(fsnotify.Create) && ok {
 
 				evType, evErr := getEventType(event.Name)
 				if evErr != nil {
@@ -82,27 +90,13 @@ func runMonitor(args runMonitorArgs) {
 		}
 	}()
 
-	// The channel must be blocked indefinitely
-	<-make(chan struct{})
-}
-
-func initializeWatcher(folderPath string, watchSubDirectories bool) *fsnotify.Watcher {
-
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer watcher.Close()
-
-	// Watch this directory
-	dirToWatch := folderPath
-	err = watcher.Add(dirToWatch)
+	err = watcher.Add(args.folderPath)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if watchSubDirectories {
-		subdirectories, err := getSubDirectories(folderPath)
+	if args.watchSubDirectories {
+		subdirectories, err := getSubDirectories(args.folderPath)
 
 		if err != nil {
 			log.Fatal(err)
@@ -116,5 +110,6 @@ func initializeWatcher(folderPath string, watchSubDirectories bool) *fsnotify.Wa
 		}
 	}
 
-	return watcher
+	// The channel must be blocked indefinitely
+	<-make(chan struct{})
 }
