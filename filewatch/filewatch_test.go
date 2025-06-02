@@ -34,3 +34,26 @@ func TestRunMonitorFile(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestRunMonitorDirectory(t *testing.T) {
+
+	fsWatcher := &FSNotifyWatcher{}
+	tmpDir := t.TempDir()
+	channels := fsWatcher.MonitorCreatedDirectories(tmpDir, false)
+	fmt.Printf("Created temporary directory: %s", tmpDir)
+
+	go func() {
+		utils.PauseSeconds(2)
+		_, err := os.Create(tmpDir)
+		if err != nil {
+			t.Logf("Failed to create test file: %s", err)
+		}
+	}()
+
+	if <-channels.EventDetected != "" {
+		t.Logf("Directory created successfully: %s", tmpDir)
+	} else {
+		t.Logf("Directory creation failed: %s", tmpDir)
+		t.Fail()
+	}
+}
